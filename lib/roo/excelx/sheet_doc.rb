@@ -157,9 +157,8 @@ module Roo
       end
 
       def extract_hyperlinks
-        # FIXME: select the valid hyperlinks and then map those.
-        Hash[doc.xpath('/worksheet/hyperlinks/hyperlink').map do |hyperlink|
-          if hyperlink.attribute('id') && (relationship = @relationships[hyperlink.attribute('id').text])
+        Hash[doc.xpath('/worksheet/hyperlinks/hyperlink[@id]').map do |hyperlink|
+          if (relationship = @relationships[hyperlink.attribute('id').text])
             [::Roo::Utils.ref_to_key(hyperlink.attributes['ref'].to_s), relationship.attribute('Target').text]
           end
         end.compact]
