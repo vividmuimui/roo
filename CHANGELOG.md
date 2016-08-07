@@ -1,3 +1,8 @@
+## Unreleased
+### Breaking Changes
+- Excelx::SheetDoc#hyperlinks and #cells no longer accept a relationships argument,
+  instead initialize the SheetDoc with the proper relationships path (the second argument)
+
 ## [2.4.0] 2016-05-14
 ### Fixed  
 - Fixed opening spreadsheets with charts [315](https://github.com/roo-rb/roo/pull/315)

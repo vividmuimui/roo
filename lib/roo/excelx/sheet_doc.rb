@@ -7,19 +7,19 @@ module Roo
       extend Forwardable
       delegate [:styles, :workbook, :shared_strings, :base_date] => :@shared
 
-      def initialize(path, relationships, shared, options = {})
+      def initialize(path, rels_path, shared, options = {})
         super(path)
         @shared = shared
         @options = options
-        @relationships = relationships
+        @relationships = Relationships.new(rels_path)
       end
 
-      def cells(relationships)
-        @cells ||= extract_cells(relationships)
+      def cells
+        @cells ||= extract_cells
       end
 
-      def hyperlinks(relationships)
-        @hyperlinks ||= extract_hyperlinks(relationships)
+      def hyperlinks
+        @hyperlinks ||= extract_hyperlinks
       end
 
       # Get the dimensions for the sheet.
@@ -40,7 +40,7 @@ module Roo
         return [] unless row_xml
         row_xml.children.each do |cell_element|
           key = ::Roo::Utils.ref_to_key(cell_element['r'])
-          yield cell_from_xml(cell_element, hyperlinks(@relationships)[key])
+          yield cell_from_xml(cell_element, hyperlinks[key])
         end
       end
 
@@ -156,10 +156,10 @@ module Roo
         Excelx::Coordinate.new(row, column)
       end
 
-      def extract_hyperlinks(relationships)
+      def extract_hyperlinks
         # FIXME: select the valid hyperlinks and then map those.
         Hash[doc.xpath('/worksheet/hyperlinks/hyperlink').map do |hyperlink|
-          if hyperlink.attribute('id') && (relationship = relationships[hyperlink.attribute('id').text])
+          if hyperlink.attribute('id') && (relationship = @relationships[hyperlink.attribute('id').text])
             [::Roo::Utils.ref_to_key(hyperlink.attributes['ref'].to_s), relationship.attribute('Target').text]
           end
         end.compact]
@@ -183,10 +183,10 @@ module Roo
         end
       end
 
-      def extract_cells(relationships)
+      def extract_cells
         extracted_cells = Hash[doc.xpath('/worksheet/sheetData/row/c').map do |cell_xml|
           key = ::Roo::Utils.ref_to_key(cell_xml['r'])
-          [key, cell_from_xml(cell_xml, hyperlinks(relationships)[key])]
+          [key, cell_from_xml(cell_xml, hyperlinks[key])]
         end]
 
         expand_merged_ranges(extracted_cells) if @options[:expand_merged_ranges]
